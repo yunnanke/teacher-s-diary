@@ -1,8 +1,5 @@
-from main_menu import info_window, menu
-from tkinter import filedialog
 import customtkinter as ctk
 from tkinter import messagebox
-from PIL import Image, ImageTk
 import re
 import json
 
@@ -27,6 +24,7 @@ def registry():
 
 
     def save_credentials():
+        from main_menu import info_window
         global mail, password, login
         login = entry_login.get()
         mail = entry_mail.get()
@@ -138,6 +136,7 @@ def login():
                             return True
 
     def autorization():
+        from main_menu import menu
         global mail, password, login
         login = entry_login.get()
         password = entry_pass.get()
@@ -229,6 +228,6 @@ def main():
     win.mainloop()
 
 
-#info_window()
+
 main()
 

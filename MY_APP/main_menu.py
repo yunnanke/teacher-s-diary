@@ -1,8 +1,7 @@
 from tkinter import filedialog
 import customtkinter as ctk
-from tkinter import messagebox
 from PIL import Image, ImageTk
-import re
+
 
 def ex():
     global menu_win
@@ -75,6 +74,37 @@ def info_window():
 
 def menu():
     global menu_win
+
+    def table():
+        global menu_win
+        menu_win.destroy()
+        from table_window import table_wind
+        table_wind()
+
+    def group():
+        global menu_win
+        menu_win.destroy()
+        from grups_window import groups
+        groups()
+
+    def stat():
+        global menu_win
+        menu_win.destroy()
+        from statistics_window import statistics_win
+        statistics_win()
+
+    def plan_():
+        global menu_win
+        menu_win.destroy()
+        from plan_window import plan_wind
+        plan_wind()
+
+    def labs():
+        global menu_win
+        menu_win.destroy()
+        from Labs_window import labs_win
+        labs_win()
+
     menu_win = ctk.CTk()
     menu_win.geometry("800x600+400+100")
     menu_win.title("Меню")
@@ -85,7 +115,7 @@ def menu():
     buttons_frame = ctk.CTkFrame(menu_win, width=200, height=550, corner_radius=20, bg_color="#F2E1D0", fg_color="#F2E1D0")
     buttons_frame.pack(side=ctk.LEFT, padx=30)
 
-    notes_frame = ctk.CTkFrame(menu_win, width=650, height=550, corner_radius=20, bg_color="#F2E1D0", fg_color="red")
+    notes_frame = ctk.CTkFrame(menu_win, width=650, height=550, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4")
     notes_frame.pack(side=ctk.RIGHT, padx=30)
 
     #photo_icon =
@@ -95,23 +125,23 @@ def menu():
     button_info.pack(pady=10, anchor="e")
     button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Расписание",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=table)
     button_table.pack(pady=10)
     button_groups = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Группы",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=group)
     button_groups.pack(pady=10)
     button_stat = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Статистика",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=stat)
     button_stat.pack(pady=10)
     button_plan = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Уч план",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=plan_)
     button_plan.pack(pady=10)
     button_labs = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Лабораторные",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=labs)
     button_labs.pack(pady=10)
     button_exit = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Выход",
@@ -121,5 +151,5 @@ def menu():
 
     menu_win.mainloop()
 
-#if "__name__" == "__main__":
-menu()
+if "__name__" == "__main__":
+    menu()
