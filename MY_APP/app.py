@@ -1,3 +1,5 @@
+from main_menu import info_window, menu
+from tkinter import filedialog
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image, ImageTk
@@ -58,6 +60,9 @@ def registry():
             data.append(new_user)
             with open("users.json", "w") as f:
                 json.dump(data, f, indent=3, ensure_ascii=False)
+                win.destroy()
+                root.destroy()
+                info_window()
             return True
         except FileNotFoundError:
             messagebox.showerror("Error", "User database not found.")
@@ -140,7 +145,9 @@ def login():
             messagebox.showerror("Error", "Please enter your login and password correctly.")
             return
         if open_credentials():
+            root.destroy()
             messagebox.showinfo("Congratulations!", f"Welcome back, {login}")
+            menu()
 
         else:
             messagebox.showerror("Error", "Incorrect login or password!")
@@ -183,7 +190,9 @@ def login():
                                 text_color="#854627", font=("Bahnschrift Light", 20), command=back)
     back_button.pack(pady=0)
 
+
     root.mainloop()
+
 
 def main():
     global win
@@ -194,10 +203,6 @@ def main():
     win.resizable(False, False)
     win.iconbitmap("icon.ico")
     win.config(bg="#F2E1D0")
-
-    image = Image.open("ico.png")
-    photo = ImageTk.PhotoImage(image)
-    font = ctk.CTkFont(family="Copperplate Gothic Light")
 
     title = ctk.CTkLabel(master=win, width=80, height=80, corner_radius=20, fg_color="#D4C7B4", bg_color="#F2E1D0",
                          text="  Добро пожаловать!  ",
@@ -224,6 +229,6 @@ def main():
     win.mainloop()
 
 
-
+#info_window()
 main()
 
