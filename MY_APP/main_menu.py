@@ -8,7 +8,7 @@ def ex():
     menu_win.destroy()
 
 def info_window():
-    global win, root
+    global info_win
 
     def choose_photo():
         global photo
@@ -22,6 +22,11 @@ def info_window():
             image_label.image = photo
             image_label.configure(image=photo)
             image_label.configure(text="")
+
+    def mene():
+        global info_win
+        info_win.destroy()
+        menu()
 
     info_win = ctk.CTk()
     info_win.geometry("800x600+400+100")
@@ -61,6 +66,10 @@ def info_window():
                              fg_color="#D4C7B4", hover_color="#B28753", text="Фото",
                              text_color="#854627", font=("Bahnschrift Light", 20), command=choose_photo)
     photo_button.pack(pady=10, anchor="w")
+    _button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
+                                 fg_color="#D4C7B4", hover_color="#B28753", text="Продолжить",
+                                 text_color="#854627", font=("Bahnschrift Light", 20), command=mene)
+    _button.pack(pady=30, anchor="w")
 
     image_frame = ctk.CTkFrame(info_win, width=800, height=400, fg_color="#D4C7B4", bg_color="#F2E1D0")
     image_frame.pack(side=ctk.RIGHT,padx=30, pady=30,anchor="e")
@@ -105,6 +114,11 @@ def menu():
         from Labs_window import labs_win
         labs_win()
 
+    def meny():
+        global menu_win
+        menu_win.destroy()
+        info_window()
+
     menu_win = ctk.CTk()
     menu_win.geometry("800x600+400+100")
     menu_win.title("Меню")
@@ -121,7 +135,7 @@ def menu():
     #photo_icon =
     button_info = ctk.CTkButton(buttons_frame, width=100, height=60, corner_radius=20, bg_color="#F2E1D0",
                              fg_color="#D4C7B4", hover_color="#B28753", text="{login}",
-                             text_color="#854627", font=("Bahnschrift Light", 20))
+                             text_color="#854627", font=("Bahnschrift Light", 20), command=meny)
     button_info.pack(pady=10, anchor="e")
     button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Расписание",

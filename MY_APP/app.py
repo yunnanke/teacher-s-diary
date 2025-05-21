@@ -62,11 +62,8 @@ def registry():
                 root.destroy()
                 info_window()
             return True
-        except FileNotFoundError:
+        except ValueError:
             messagebox.showerror("Error", "User database not found.")
-            return False
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {e}")
             return False
 
     def toggle_password():
