@@ -1,4 +1,6 @@
 import customtkinter as ctk
+import psycopg2
+import tkinter.ttk as ttk
 
 def back():
     from main_menu import menu
@@ -14,12 +16,52 @@ def groups():
     groups_win.iconbitmap("icon.ico")
     groups_win.resizable(False, False)
 
+    def connect_db():
+        try:
+            conn = psycopg2.connect(
+                host="localhost",
+                database="postgres",
+                user="postgres",
+                password="1234",
+                port="5432"
+            )
+            return conn
+        except ValueError:
+            return None
+
+    def delete():
+        global tree
+        tree.destroy()
+        load_groups()
+
+    def load_groups():
+        global tree
+        conn = connect_db()
+        if conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM schema_324.group_notes;")
+            rows = cur.fetchall()
+            columns = [desc[0] for desc in cur.description]
+            cur.close()
+            conn.close()
+
+            tree = ttk.Treeview(notes_frame,  columns=columns, show='headings', height=30)
+            tree.pack(expand=True, padx=10, pady=10)
+
+            for col in columns:
+                tree.heading(col, text=col)
+                tree.column(col, width=150, anchor=ctk.CENTER)
+
+            for row in rows:
+                tree.insert('', ctk.END, values=row)
+
+
     buttons_frame = ctk.CTkFrame(groups_win, width=200, height=400, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#F2E1D0")
     buttons_frame.pack(side=ctk.LEFT, padx=30, pady=50,  anchor="n")
 
     notes_frame = ctk.CTkFrame(groups_win, width=650, height=700, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4")
-    notes_frame.pack(side=ctk.RIGHT, padx=30)
+    notes_frame.pack(side=ctk.TOP, padx=30, pady=50)
     button_info = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Группы",
                                 text_color="#854627", font=("Bahnschrift Light", 20))
@@ -44,6 +86,7 @@ def groups():
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Назад",
                                  text_color="#854627", font=("Bahnschrift Light", 20), command=back)
     button_table.place(x=30, y=692)
+    load_groups()
 
     groups_win.mainloop()
 
