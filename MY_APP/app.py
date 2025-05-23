@@ -3,6 +3,7 @@ from tkinter import messagebox
 import re
 import json
 
+
 def ex():
     global win
     win.destroy()
@@ -25,8 +26,9 @@ def registry():
 
     def save_credentials():
         from main_menu import info_window
-        global mail, password, login
+        global mail, password, login, login_for_save
         login = entry_login.get()
+        login_for_save = login
         mail = entry_mail.get()
         password = entry_pass.get()
 
@@ -121,13 +123,14 @@ def login():
     root.config(bg="#F2E1D0")
 
     def open_credentials():
-        global data, dictionary
+        global data, dictionary, login_for_save
         login = entry_login.get()
         password = entry_pass.get()
         with open("users.json", "r") as f:
             data = json.load(f)
             for dictionary in data:
                 if dictionary["username"] == login:
+                    login_for_save = login
                     for dictionary in data:
                         if dictionary["password"] == password:
                             return True
@@ -223,7 +226,6 @@ def main():
 
 
     win.mainloop()
-
 
 
 main()
