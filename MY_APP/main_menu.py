@@ -1,6 +1,10 @@
 from tkinter import filedialog
 import customtkinter as ctk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps
+import psycopg2
+from psycopg2 import Binary
+from tkinter import messagebox
+
 
 
 def ex():
@@ -10,11 +14,55 @@ def ex():
 def info_window():
     global info_win
 
+    def connect_db():
+        try:
+            conn = psycopg2.connect(
+                host="localhost",
+                database="postgres",
+                user="postgres",
+                password="1234",
+                port="5432"
+            )
+            return conn
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось подключиться к БД:\n{e}")
+            return None
+
+    def update_note():
+        global photo, selected_file_path
+
+        with open(selected_file_path, "rb") as file:
+            binary_data = file.read()
+
+        name = name_ent.get()
+        fam = fam_ent.get()
+        ot = o_ent.get()
+        post = post_ent.get()
+        phone = num_ent.get()
+
+        try:
+            conn = connect_db()
+            cur = conn.cursor()
+            cur.execute(
+                """INSERT INTO schema_table.contacts (Имя, Фамилия, Отчество, Должность, Телефон, Расписание, Фото)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s);""",
+                (name, fam, ot, post, "", phone, Binary(binary_data)))
+            conn.commit()
+            cur.close()
+            conn.close()
+
+
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось сохранить данные: {e}")
+
     def choose_photo():
-        global photo
+        global photo, selected_file_path
+        photo = ""
         file_path = filedialog.askopenfilename(
             filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif")])
+
         if file_path:
+            selected_file_path = file_path
             image = Image.open(file_path)
             image.thumbnail((400, 600))
             photo = ImageTk.PhotoImage(image)
@@ -25,8 +73,12 @@ def info_window():
 
     def mene():
         global info_win
-        info_win.destroy()
-        menu()
+        if name_ent.get() == "" or fam_ent.get() == "" or o_ent.get() == "" or num_ent.get() == "" or photo == "":
+            messagebox.showerror("Ошибка", f"Введите данные!")
+        else:
+            update_note()
+            info_win.destroy()
+            menu()
 
     info_win = ctk.CTk()
     info_win.geometry("800x600+400+100")
@@ -118,7 +170,12 @@ def menu():
         global menu_win
         menu_win.destroy()
         info_window()
+    namespace = {}
+    with open('app.py', 'r', encoding='utf-8') as f:
+        code = f.read()
+        exec(code, namespace)
 
+    login = namespace['login']
     menu_win = ctk.CTk()
     menu_win.geometry("800x600+400+100")
     menu_win.title("Меню")
@@ -132,9 +189,22 @@ def menu():
     notes_frame = ctk.CTkFrame(menu_win, width=650, height=550, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4")
     notes_frame.pack(side=ctk.RIGHT, padx=30)
 
-    #photo_icon =
+    pil_image = Image.open(selected_file_path).convert("RGBA")
+    size = 80
+    pil_image = pil_image.resize((size, size), Image.LANCZOS)
+
+    mask = Image.new("L", (size, size), 0)
+    from PIL import ImageDraw
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, size, size), fill=255)
+    rounded_image = ImageOps.fit(pil_image, mask.size, centering=(0.5, 0.5))
+    rounded_image.putalpha(mask)
+
+    photo_icon = ImageTk.PhotoImage(rounded_image)
+    icon_ = ctk.CTkLabel(buttons_frame, text="", image=photo_icon)
+    icon_.place(x=10, y=10)
     button_info = ctk.CTkButton(buttons_frame, width=100, height=60, corner_radius=20, bg_color="#F2E1D0",
-                             fg_color="#D4C7B4", hover_color="#B28753", text="{login}",
+                             fg_color="#D4C7B4", hover_color="#B28753", text=f"{login}",
                              text_color="#854627", font=("Bahnschrift Light", 20), command=meny)
     button_info.pack(pady=10, anchor="e")
     button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
@@ -165,5 +235,5 @@ def menu():
 
     menu_win.mainloop()
 
-if "__name__" == "__main__":
-    menu()
+#if "__name__" == "__main__":
+menu()
