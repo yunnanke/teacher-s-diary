@@ -7,14 +7,14 @@ from tkinter import filedialog
 from psycopg2 import Binary
 
 def back():
-    from main_menu import menu
+    from main_app import menu
     plan_win.destroy()
     menu()
 
 def plan_wind():
     global plan_win
     plan_win = ctk.CTk()
-    plan_win.geometry("800x600+300+90")
+    plan_win.geometry("900x600+300+90")
     plan_win.title("Группы")
     plan_win.config(bg="#F2E1D0")
     plan_win.iconbitmap("icon.ico")
@@ -146,6 +146,5 @@ def plan_wind():
     plan_win.mainloop()
 
 
-"""if "__name__" == "__main__":
-    groups()"""
-plan_wind()
+if __name__ == "__main__":
+    plan_wind()

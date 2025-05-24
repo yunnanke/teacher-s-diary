@@ -3,7 +3,7 @@ import psycopg2
 import tkinter.ttk as ttk
 
 def back():
-    from main_menu import menu
+    from main_app import menu
     stat_win.destroy()
     menu()
 
@@ -147,6 +147,5 @@ def statistics_win():
     stat_win.mainloop()
 
 
-"""if "__name__" == "__main__":
-    groups()"""
-statistics_win()
+if __name__ == "__main__":
+    statistics_win()

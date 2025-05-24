@@ -5,7 +5,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 from tkinter import filedialog
 from psycopg2 import Binary
-import magic
+#import magic
 import os
 
 file_types = {
@@ -17,7 +17,7 @@ file_types = {
     }
 
 def back():
-    from main_menu import menu
+    from main_app import menu
     lab_win.destroy()
     menu()
 
@@ -84,13 +84,13 @@ def labs_win():
                 result = cursor.fetchone()
                 if result:
                     display_text = Binary(result)
-                    check_file(display_text)
+                    #check_file(display_text)
                     break
                 else:
                     print("Файл не найден в базе данных")
 
 
-    def check_file(binary_data):
+    """def check_file(binary_data):
         try:
             mime = magic.from_buffer(binary_data, mime=True)
             extension = file_types.get(mime, '.bin')
@@ -114,7 +114,7 @@ def labs_win():
             open_file(filename)
 
         except Exception as e:
-            print("Ошибка при обработке файла:", e)
+            print("Ошибка при обработке файла:", e)"""
 
 
     def open_file(filepath):
@@ -220,6 +220,5 @@ def labs_win():
     lab_win.mainloop()
 
 
-"""if "__name__" == "__main__":
-    groups()"""
-labs_win()
+if __name__ == "__main__":
+    labs_win()
