@@ -4,7 +4,7 @@ import tkinter.ttk as ttk
 from tkinter import messagebox
 
 def back():
-    from main_menu import menu
+    from main_app import menu
     groups_win.destroy()
     menu()
 
@@ -285,6 +285,5 @@ def groups():
     groups_win.mainloop()
 
 
-"""if "__name__" == "__main__":
-    groups()"""
-groups()
+if __name__ == "__main__":
+    groups()
