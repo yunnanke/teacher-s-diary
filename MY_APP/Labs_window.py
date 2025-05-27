@@ -16,15 +16,15 @@ file_types = {
         'image/jpeg': '.jpg'
     }
 
-def back():
+def back(log):
     from main_app import menu
     lab_win.destroy()
-    menu()
+    menu(log)
 
-def labs_win():
+def labs_win(login):
     global lab_win
     lab_win = ctk.CTk()
-    lab_win.geometry("900x700+400+90")
+    lab_win.geometry("900x600+400+90")
     lab_win.title("Группы")
     lab_win.config(bg="#F2E1D0")
     lab_win.iconbitmap("icon.ico")
@@ -90,40 +90,6 @@ def labs_win():
                     print("Файл не найден в базе данных")
 
 
-    """def check_file(binary_data):
-        try:
-            mime = magic.from_buffer(binary_data, mime=True)
-            extension = file_types.get(mime, '.bin')
-
-            filename = filedialog.asksaveasfilename(
-                defaultextension=extension,
-                filetypes=[
-                    ("Document", ".docx"),
-                    ("Spreadsheet", ".xlsx"),
-                    ("Image", ".png .jpg"),
-                ]
-            )
-
-            if not filename:
-                return
-
-            with open(filename, "wb") as f:
-                f.write(binary_data)
-
-
-            open_file(filename)
-
-        except Exception as e:
-            print("Ошибка при обработке файла:", e)"""
-
-
-    def open_file(filepath):
-        if os.name == 'nt':
-            os.startfile(filepath)
-        else:
-            print("Не удалось открыть файл: неподдерживаемая ОС")
-
-
     def choose_file():
         global selected_file_path
         selected_file_path = ""
@@ -147,18 +113,57 @@ def labs_win():
                 except Exception as e:
                     messagebox.showerror("Ошибка", f"Ошибка при открытии изображения: {e}")
 
+    def open_file(file_path):
+        try:
+            os.startfile(file_path)
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось открыть файл: {e}")
+
+    def get_file_path(file_id):
+        conn = connect_db()
+        if not conn:
+            return None
+
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT Файл FROM schema_table.para_plan WHERE Тема = %s", (file_id,))
+            result = cur.fetchone()
+            cur.close()
+            conn.close()
+
+            if result:
+                return result[0]
+            else:
+                messagebox.showerror("Ошибка", "Файл не найден в базе данных.")
+                return None
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось получить путь к файлу: {e}")
+            return None
+
+    def on_double_click(event):
+        selected_item = tree.focus()
+        if not selected_item:
+            messagebox.showwarning("Предупреждение", "Ничего не выбрано.")
+            return
+
+        file_id = tree.item(selected_item, "values")[2]  # Предполагается, что ID файла — первый столбец
+
+        file_path = get_file_path(file_id)
+
+        if file_path:
+            open_file(file_path)
+
     def create_file():
+        global next_id
         choose_file()
-        with open(selected_file_path, "rb") as file:
-            binary_data = file.read()
 
         try:
             conn = connect_db()
             cur = conn.cursor()
             cur.execute(
                 """INSERT INTO schema_table.para_plan (Номер_группы, Предмет, Тема, Файл)
-                 VALUES (%s, %s, %s,%s);""",
-                ("", "", "7", Binary(binary_data),))
+                 VALUES (%s, %s, %s, %s);""",
+                ("", "", str((next_id + 1)), selected_file_path))
             conn.commit()
             cur.close()
             conn.close()
@@ -169,7 +174,7 @@ def labs_win():
 
 
     def load_labs():
-        global tree
+        global tree, next_id
         conn = connect_db()
         if conn:
             cur = conn.cursor()
@@ -181,14 +186,16 @@ def labs_win():
 
             tree = ttk.Treeview(notes_frame, columns=columns, style="Custom.Treeview", show='headings', height=20, cursor="hand2")
             tree.pack(expand=True, padx=10, pady=10)
-            tree.bind("<Double-Button-1>", on_treeview_click)
+            tree.bind("<Double-1>", on_double_click)
 
             for col in columns:
                 tree.heading(col, text=col)
                 tree.column(col, width=150, anchor=ctk.CENTER)
+                next_id = 0
 
             for row in rows:
                 tree.insert('', ctk.END, values=row)
+                next_id += 1
 
     up_buttons_frame = ctk.CTkFrame(lab_win, width=200, height=200, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#F2E1D0")
@@ -213,12 +220,12 @@ def labs_win():
     button_table.pack(pady=10)
     button_table = ctk.CTkButton(lab_win, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Назад",
-                                 text_color="#854627", font=("Bahnschrift Light", 20), command=back)
-    button_table.place(x=30, y=592)
+                                 text_color="#854627", font=("Bahnschrift Light", 20), command=lambda:back(login))
+    button_table.place(x=30, y=492)
     load_labs()
 
     lab_win.mainloop()
 
 
-if __name__ == "__main__":
-    labs_win()
+"""if __name__ == "__main__":
+    labs_win()"""

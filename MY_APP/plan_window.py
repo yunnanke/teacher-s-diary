@@ -5,13 +5,14 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 from tkinter import filedialog
 from psycopg2 import Binary
+import os
 
-def back():
+def back(log):
     from main_app import menu
     plan_win.destroy()
-    menu()
+    menu(log)
 
-def plan_wind():
+def plan_wind(login):
     global plan_win
     plan_win = ctk.CTk()
     plan_win.geometry("900x600+300+90")
@@ -74,18 +75,57 @@ def plan_wind():
                 except Exception as e:
                     messagebox.showerror("Ошибка", f"Ошибка при открытии изображения: {e}")
 
+    def open_file(file_path):
+        try:
+            os.startfile(file_path)
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось открыть файл: {e}")
+
+    def get_file_path(file_id):
+        conn = connect_db()
+        if not conn:
+            return None
+
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT Файл FROM schema_table.para_plan WHERE Тема = %s", (file_id,))
+            result = cur.fetchone()
+            cur.close()
+            conn.close()
+
+            if result:
+                return result[0]
+            else:
+                messagebox.showerror("Ошибка", "Файл не найден в базе данных.")
+                return None
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось получить путь к файлу: {e}")
+            return None
+
+    def on_double_click(event):
+        selected_item = tree.focus()
+        if not selected_item:
+            messagebox.showwarning("Предупреждение", "Ничего не выбрано.")
+            return
+
+        file_id = tree.item(selected_item, "values")[2]  # Предполагается, что ID файла — первый столбец
+
+        file_path = get_file_path(file_id)
+
+        if file_path:
+            open_file(file_path)
+
     def create_file():
+        global next_id
         choose_file()
-        with open(selected_file_path, "rb") as file:
-            binary_data = file.read()
 
         try:
             conn = connect_db()
             cur = conn.cursor()
             cur.execute(
-                """INSERT INTO schema_table.para_plan (Номер_группы, Предмет, Файл)
-                 VALUES (%s, %s, %s);""",
-                ("", "", Binary(binary_data)))
+                """INSERT INTO schema_table.para_plan (Номер_группы, Предмет, Тема, Файл)
+                 VALUES (%s, %s, %s, %s);""",
+                ("", "", str((next_id + 1)), selected_file_path))
             conn.commit()
             cur.close()
             conn.close()
@@ -96,7 +136,7 @@ def plan_wind():
 
 
     def load_plan():
-        global tree
+        global tree, next_id
         conn = connect_db()
         if conn:
             cur = conn.cursor()
@@ -108,13 +148,15 @@ def plan_wind():
 
             tree = ttk.Treeview(notes_frame, columns=columns, show='headings', style="Custom.Treeview", height=20, cursor="hand2")
             tree.pack(expand=True, padx=10, pady=10)
+            tree.bind("<Double-1>", on_double_click)
 
             for col in columns:
                 tree.heading(col, text=col)
                 tree.column(col, width=150, anchor=ctk.CENTER)
-
+                next_id = 0
             for row in rows:
                 tree.insert('', ctk.END, values=row)
+                next_id += 1
 
     up_buttons_frame = ctk.CTkFrame(plan_win, width=200, height=200, corner_radius=20, bg_color="#F2E1D0",
                                     fg_color="#F2E1D0")
@@ -139,12 +181,12 @@ def plan_wind():
     button_table.pack(pady=60)
     button_table = ctk.CTkButton(plan_win, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Назад",
-                                 text_color="#854627", font=("Bahnschrift Light", 20), command=back)
+                                 text_color="#854627", font=("Bahnschrift Light", 20), command=lambda:back(login))
     button_table.place(x=30, y=492)
     load_plan()
 
     plan_win.mainloop()
 
 
-if __name__ == "__main__":
-    plan_wind()
+"""if __name__ == "__main__":
+    plan_wind()"""

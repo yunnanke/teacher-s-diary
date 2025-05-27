@@ -4,15 +4,15 @@ import psycopg2
 from tkinter import messagebox
 
 
-def back():
+def back(log):
     from main_app import menu
     table_win.destroy()
-    menu()
+    menu(log)
 
-def table_wind():
+def table_wind(login):
     global table_win
     table_win = ctk.CTk()
-    table_win.geometry("1000x800+300+50")
+    table_win.geometry("1000x500+300+50")
     table_win.title("Расписание")
     table_win.config(bg="#F2E1D0")
     table_win.iconbitmap("icon.ico")
@@ -127,10 +127,6 @@ def table_wind():
                                 text_color="#854627", font=("Bahnschrift Light", 20), command=delete)
     button_info.pack(pady=10)
     button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
-                                 fg_color="#D4C7B4", hover_color="#B28753", text="Замены",
-                                 text_color="#854627", font=("Bahnschrift Light", 20))
-    button_table.pack(pady=10)
-    button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Пары",
                                  text_color="#854627", font=("Bahnschrift Light", 20), command=load_para)
     button_table.pack(pady=10)
@@ -140,13 +136,13 @@ def table_wind():
     button_table.pack(pady=10)
     button_table = ctk.CTkButton(table_win, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Назад",
-                                 text_color="#854627", font=("Bahnschrift Light", 20), command=back)
-    button_table.place(x=30, y=692)
+                                 text_color="#854627", font=("Bahnschrift Light", 20), command=lambda:back(login))
+    button_table.place(x=30, y=412)
     load_data()
 
     table_win.mainloop()
 
 
-if __name__ == "__main__":
-    table_wind()
+"""if __name__ == "__main__":
+    table_wind(login)"""
 

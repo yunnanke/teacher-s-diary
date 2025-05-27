@@ -2,15 +2,15 @@ import customtkinter as ctk
 import psycopg2
 import tkinter.ttk as ttk
 
-def back():
+def back(log):
     from main_app import menu
     stat_win.destroy()
-    menu()
+    menu(log)
 
-def statistics_win():
+def statistics_win(login):
     global stat_win
     stat_win = ctk.CTk()
-    stat_win.geometry("900x800+300+50")
+    stat_win.geometry("900x580+300+50")
     stat_win.title("Группы")
     stat_win.config(bg="#F2E1D0")
     stat_win.iconbitmap("icon.ico")
@@ -126,10 +126,6 @@ def statistics_win():
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Группы",
                                 text_color="#854627", font=("Bahnschrift Light", 20), command=delete)
     button_info.pack(pady=10)
-    button_info = ctk.CTkButton(up_buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
-                                fg_color="#D4C7B4", hover_color="#B28753", text="Предмет",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
-    button_info.pack(pady=10)
     button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Успеваемость",
                                  text_color="#854627", font=("Bahnschrift Light", 20), command=load_marcks_stat)
@@ -140,12 +136,12 @@ def statistics_win():
     button_table.pack(pady=10)
     button_table = ctk.CTkButton(stat_win, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Назад",
-                                 text_color="#854627", font=("Bahnschrift Light", 20), command=back)
-    button_table.place(x=30, y=692)
+                                 text_color="#854627", font=("Bahnschrift Light", 20), command=lambda:back(login))
+    button_table.place(x=30, y=492)
     load_groups()
 
     stat_win.mainloop()
 
 
-if __name__ == "__main__":
-    statistics_win()
+"""if __name__ == "__main__":
+    statistics_win()"""
