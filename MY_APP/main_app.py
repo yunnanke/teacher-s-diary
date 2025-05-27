@@ -1,9 +1,12 @@
 import customtkinter as ctk
+from customtkinter import CTkImage
 from tkinter import messagebox
 import re
 import json
 from tkinter import filedialog
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
+import psycopg2
+from psycopg2 import Binary
 
 def ex():
     global win
@@ -59,13 +62,13 @@ def registry():
                     messagebox.showerror("Error", "This mail is already in use!")
                     return False
 
-            new_user = {"mail": mail, "password": password, "username": login}
+            new_user = {"mail": mail, "password": password, "username": login, "name":""}
             data.append(new_user)
             with open("users.json", "w") as f:
                 json.dump(data, f, indent=3, ensure_ascii=False)
                 win.destroy()
                 root.destroy()
-                info_window()
+                info_window(login)
             return True
         except ValueError:
             messagebox.showerror("Error", "User database not found.")
@@ -147,8 +150,7 @@ def log_in():
         if open_credentials():
             root.destroy()
             win.destroy()
-            messagebox.showinfo("Congratulations!", f"Welcome back, {login}")
-            menu()
+            menu(login)
 
         else:
             messagebox.showerror("Error", "Incorrect login or password!")
@@ -194,14 +196,78 @@ def log_in():
 
     root.mainloop()
 
-def info_window():
+def info_window(log):
     global info_win
+    login = log
+
+    def connect_db():
+        try:
+            conn = psycopg2.connect(
+                host="localhost",
+                database="postgres",
+                user="postgres",
+                password="1234",
+                port="5432"
+            )
+            return conn
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось подключиться к БД:\n{e}")
+            return None
+
+    def update_note():
+        global photo, selected_file_path
+
+        """with open(selected_file_path, "rb") as file:
+            binary_data = file.read()"""
+
+        name = name_ent.get()
+        fam = fam_ent.get()
+        ot = o_ent.get()
+        post = post_ent.get()
+        phone = num_ent.get()
+
+        try:
+            conn = connect_db()
+            cur = conn.cursor()
+            cur.execute(
+                """INSERT INTO schema_table.contacts (Имя, Фамилия, Отчество, Должность, Телефон, Фото)
+                 VALUES (%s, %s, %s, %s, %s, %s);""",
+                (name, fam, ot, post, phone, Binary(photo)))
+            conn.commit()
+            cur.close()
+            conn.close()
+
+
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось сохранить данные: {e}")
+
+    def open_users():
+        global data, login
+        name = name_ent.get()
+        try:
+            with open("users.json", "r") as f:
+                data = json.load(f)
+
+                found = False
+                for user in data:
+                    if user["username"] == login:
+                        user["name"] = name
+                        found = True
+                        break
+
+                if found:
+                        update_note()
+
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Ошибка при обновлении users.json:\n{e}")
 
     def choose_photo():
-        global photo
+        global photo, selected_file_path
+        photo = ""
         file_path = filedialog.askopenfilename(
             filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.gif")])
         if file_path:
+            selected_file_path = file_path
             image = Image.open(file_path)
             image.thumbnail((400, 600))
             photo = ImageTk.PhotoImage(image)
@@ -212,8 +278,14 @@ def info_window():
 
     def mene():
         global info_win
-        info_win.destroy()
-        menu()
+        if name_ent.get() == "" or fam_ent.get() == "" or o_ent.get() == "" or num_ent.get() == "" or photo == "":
+            messagebox.showerror("Ошибка", f"Введите данные!")
+        else:
+            open_users()
+            info_win.destroy()
+            menu(log)
+
+
 
     info_win = ctk.CTk()
     info_win.geometry("800x600+400+100")
@@ -268,7 +340,7 @@ def info_window():
     info_win.mainloop()
 
 
-def menu():
+def menu(login):
     global menu_win
 
     def table():
@@ -303,8 +375,21 @@ def menu():
 
     def meny():
         global menu_win
+        log = None
         menu_win.destroy()
-        info_window()
+        info_window(log)
+
+    def create_rounded_avatar():
+        image = Image.open("icon.ico")
+        image = image.resize((60, 60), Image.LANCZOS)
+        mask = Image.new('L', image.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0) + image.size, fill=255)
+        output_image = Image.new("RGBA", image.size)
+        output_image.paste(image, (0, 0), mask)
+
+        # Возвращаем объект CTkImage
+        return CTkImage(output_image, size=image.size)
 
     menu_win = ctk.CTk()
     menu_win.geometry("800x600+400+100")
@@ -319,9 +404,11 @@ def menu():
     notes_frame = ctk.CTkFrame(menu_win, width=650, height=550, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4")
     notes_frame.pack(side=ctk.RIGHT, padx=30)
 
-    #photo_icon =
+    photo = create_rounded_avatar()
+    photo_icon = ctk.CTkLabel(buttons_frame, text="", image=photo)
+    photo_icon.place(x=10, y=10)
     button_info = ctk.CTkButton(buttons_frame, width=100, height=60, corner_radius=20, bg_color="#F2E1D0",
-                             fg_color="#D4C7B4", hover_color="#B28753", text="{login}",
+                             fg_color="#D4C7B4", hover_color="#B28753", text=f"{login}",
                              text_color="#854627", font=("Bahnschrift Light", 20), command=meny)
     button_info.pack(pady=10, anchor="e")
     button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",

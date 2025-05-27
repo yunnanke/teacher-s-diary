@@ -2,26 +2,13 @@
    {
       "mail": "mail",
       "password": "password",
-      "username": "login"
+      "username": "login",
+      "name": ""
    },
    {
-      "mail": "kjhgfcvbjkl@mail.ru",
-      "password": "kjhgfvbhnjkl,kmjnhb",
-      "username": "kjhgvbnjmkl"
-   },
-   {
-      "mail": "kfkjfki@gmail.com",
-      "password": "jhgfdcvfgbhjkmjhg",
-      "username": "kfjfkf"
-   },
-   {
-      "mail": "yuna@mail.ru",
+      "mail": "mail@mail.ru",
       "password": "yuna",
-      "username": "yuna"
-   },
-   {
-      "mail": "kjhgfd@mail.ru",
-      "password": "jmhgfd",
-      "username": "lkjhgfvc"
+      "username": "yuna",
+      "name": ""
    }
 ]

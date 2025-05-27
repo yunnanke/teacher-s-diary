@@ -41,7 +41,7 @@ def groups():
             try:
                 conn = connect_db()
                 cur = conn.cursor()
-                cur.execute("INSERT INTO schema_table.group_notes (Номер_группы, id, Студент, Заметка) VALUES (%s, %s, %s, %s);""",
+                cur.execute("INSERT INTO schema_324.group_notes (Номер_группы, id, Студент, Заметка) VALUES (%s, %s, %s, %s);""",
                             ("", student_id,new_note, ""))
                 cur.execute(
                     "INSERT INTO schema_324.attendance (Номер_группы, Предмет, Студент) VALUES (%s, %s, %s);""",
