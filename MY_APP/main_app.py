@@ -6,7 +6,6 @@ import json
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageDraw
 import psycopg2
-from psycopg2 import Binary
 
 def ex():
     global win
@@ -214,11 +213,10 @@ def info_window(log):
             messagebox.showerror("Ошибка", f"Не удалось подключиться к БД:\n{e}")
             return None
 
-    def update_note():
-        global photo, selected_file_path
+    def update_note(image):
 
-        """with open(selected_file_path, "rb") as file:
-            binary_data = file.read()"""
+        with open(image, "rb") as file:
+            binary_data = file.read()
 
         name = name_ent.get()
         fam = fam_ent.get()
@@ -230,33 +228,34 @@ def info_window(log):
             conn = connect_db()
             cur = conn.cursor()
             cur.execute(
-                """INSERT INTO schema_table.contacts (Имя, Фамилия, Отчество, Должность, Телефон, Фото)
-                 VALUES (%s, %s, %s, %s, %s, %s);""",
-                (name, fam, ot, post, phone, Binary(photo)))
+                """INSERT INTO schema_table.contacts (Логин, Имя, Фамилия, Отчество, Должность, Телефон, Фото)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s);""",
+                (login, name, fam, ot, post, phone, binary_data))
             conn.commit()
             cur.close()
             conn.close()
+            info_win.destroy()
+            menu(log)
 
 
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось сохранить данные: {e}")
 
     def open_users():
-        global data, login
-        name = name_ent.get()
+        global data
         try:
-            with open("users.json", "r") as f:
-                data = json.load(f)
+            conn = connect_db()
+            cur = conn.cursor()
 
-                found = False
-                for user in data:
-                    if user["username"] == login:
-                        user["name"] = name
-                        found = True
-                        break
+            cur.execute("SELECT Логин FROM schema_table.contacts WHERE Логин = %s ", (log,))
+            result = cur.fetchone()
 
-                if found:
-                        update_note()
+            cur.close()
+            if result:
+                info_win.destroy()
+                menu(log)
+            else:
+                update_note(selected_file_path)
 
         except Exception as e:
             messagebox.showerror("Ошибка", f"Ошибка при обновлении users.json:\n{e}")
@@ -272,21 +271,56 @@ def info_window(log):
             image.thumbnail((400, 600))
             photo = ImageTk.PhotoImage(image)
 
+            #photoimage = CTkImage(Image.open(selected_file_path))
+
             image_label.image = photo
             image_label.configure(image=photo)
             image_label.configure(text="")
 
     def mene():
         global info_win
-        if name_ent.get() == "" or fam_ent.get() == "" or o_ent.get() == "" or num_ent.get() == "" or photo == "":
+        if name_ent.get() == "" or fam_ent.get() == "" or o_ent.get() == "" or num_ent.get() == "":
             messagebox.showerror("Ошибка", f"Введите данные!")
         else:
             open_users()
-            info_win.destroy()
-            menu(log)
+
+    def check_login():
+        global current_user_data
+        conn = None
+        try:
+            conn = connect_db()
+            cur = conn.cursor()
+
+            cur.execute("SELECT Логин FROM schema_table.contacts WHERE Логин = %s ", (login,))
+            res = cur.fetchone()
+
+            if res:
+                cur.execute(
+                    "SELECT Имя, Фамилия, Отчество, Должность, Телефон, Фото FROM schema_table.contacts WHERE Логин = %s",
+                    (log,))
+                result = cur.fetchone()
+
+                name, surname, otchestvo, post, phone, photo_binary = result
+                current_user_data = {
+                        "Имя": name,
+                        "Фамилия": surname,
+                        "Отчество": otchestvo,
+                        "Должность": post,
+                        "Телефон": phone,
+                        "Фото": photo_binary
+                    }
+                return True
+            else:
+                return False
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Ошибка при проверке логина: {e}")
+            return False
+        finally:
+            if conn:
+                conn.close()
 
 
-
+    global current_user_data
     info_win = ctk.CTk()
     info_win.geometry("800x600+400+100")
     info_win.title("Контактная информация")
@@ -294,48 +328,103 @@ def info_window(log):
     info_win.iconbitmap("icon.ico")
     info_win.config(bg="#F2E1D0")
 
-    frame = ctk.CTkFrame(info_win, width=800, height=600, fg_color="#F2E1D0", bg_color="#F2E1D0")
-    frame.pack(side=ctk.LEFT,padx=30, pady=10)
+    if check_login():
+        frame = ctk.CTkFrame(info_win, width=800, height=600, fg_color="#F2E1D0", bg_color="#F2E1D0")
+        frame.pack(side=ctk.LEFT, padx=30, pady=10)
 
-    name_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
-                            placeholder_text="Имя",
-                            placeholder_text_color="#c97349", font=("Bahnschrift Light", 20),border_width=0)
-    name_ent.pack(pady=10)
-    fam_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
-                            placeholder_text="Фамилия",
-                            placeholder_text_color="#c97349", font=("Bahnschrift Light", 20),border_width=0)
-    fam_ent.pack(pady=10)
-    o_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
-                            placeholder_text="Отчество",
-                            placeholder_text_color="#c97349", font=("Bahnschrift Light", 20),border_width=0)
-    o_ent.pack(pady=10)
-    post_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
-                            placeholder_text="Должность",
-                            placeholder_text_color="#c97349", font=("Bahnschrift Light", 20),border_width=0)
-    post_ent.pack(pady=10)
-    num_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
-                            placeholder_text="Контактный телефон",
-                            placeholder_text_color="#c97349", font=("Bahnschrift Light", 20),border_width=0)
-    num_ent.pack(pady=10)
-    table_button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
-                                fg_color="#D4C7B4", hover_color="#B28753", text="Расписание(PDF\Exel)",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
-    table_button.pack(pady=10, anchor="w")
-    photo_button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
-                             fg_color="#D4C7B4", hover_color="#B28753", text="Фото",
-                             text_color="#854627", font=("Bahnschrift Light", 20), command=choose_photo)
-    photo_button.pack(pady=10, anchor="w")
-    _button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
-                                 fg_color="#D4C7B4", hover_color="#B28753", text="Продолжить",
-                                 text_color="#854627", font=("Bahnschrift Light", 20), command=mene)
-    _button.pack(pady=30, anchor="w")
+        name_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                                placeholder_text="Имя",
+                                placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        name_ent.pack(pady=10)
+        name_ent.insert(0, current_user_data.get("Имя",""))
+        fam_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                               placeholder_text="Фамилия",
+                               placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        fam_ent.pack(pady=10)
+        fam_ent.insert(0, current_user_data.get("Фамилия",""))
+        o_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                             placeholder_text="Отчество",
+                             placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        o_ent.pack(pady=10)
+        o_ent.insert(0, current_user_data.get("Отчество",""))
+        post_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                                placeholder_text="Должность",
+                                placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        post_ent.pack(pady=10)
+        post_ent.insert(0, current_user_data.get("Должность",""))
+        num_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                               placeholder_text="Контактный телефон",
+                               placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        num_ent.pack(pady=10)
+        num_ent.insert(0, current_user_data.get("Телефон",""))
+        photo_button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
+                                     fg_color="#D4C7B4", hover_color="#B28753", text="Фото",
+                                     text_color="#854627", font=("Bahnschrift Light", 20), command=choose_photo)
+        photo_button.pack(pady=10, anchor="w")
+        _button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
+                                fg_color="#D4C7B4", hover_color="#B28753", text="Продолжить",
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=mene)
+        _button.pack(pady=30, anchor="w")
 
-    image_frame = ctk.CTkFrame(info_win, width=800, height=400, fg_color="#D4C7B4", bg_color="#F2E1D0")
-    image_frame.pack(side=ctk.RIGHT,padx=30, pady=30,anchor="e")
+        image_frame = ctk.CTkFrame(info_win, width=800, height=400, fg_color="#D4C7B4", bg_color="#F2E1D0")
+        image_frame.pack(side=ctk.RIGHT, padx=30, pady=30, anchor="e")
 
-    image_label = ctk.CTkLabel(image_frame, width=800, height=400, fg_color="#D4C7B4", bg_color="#F2E1D0", text="Фото",
-                                text_color="#854627", font=("Bahnschrift Light", 20))
-    image_label.pack()
+        image_label = ctk.CTkLabel(image_frame, width=800, height=400, fg_color="#D4C7B4", bg_color="#F2E1D0",
+                                   text="Фото",
+                                   text_color="#854627", font=("Bahnschrift Light", 20))
+        image_label.pack()
+        photo_binary = current_user_data.get("Фото")
+        if photo_binary:
+            try:
+                from io import BytesIO
+                image = Image.open(BytesIO(photo_binary)).convert("RGBA")
+                image.thumbnail((400, 600))
+                photo = ImageTk.PhotoImage(image)
+                image_label.configure(image=photo, text="")
+                image_label.image = photo
+            except Exception as e:
+                print("Не удалось отобразить фото:", e)
+
+    else:
+        frame = ctk.CTkFrame(info_win, width=800, height=600, fg_color="#F2E1D0", bg_color="#F2E1D0")
+        frame.pack(side=ctk.LEFT, padx=30, pady=10)
+
+        name_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                                placeholder_text="Имя",
+                                placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        name_ent.pack(pady=10)
+        fam_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                               placeholder_text="Фамилия",
+                               placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        fam_ent.pack(pady=10)
+        o_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                             placeholder_text="Отчество",
+                             placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        o_ent.pack(pady=10)
+        post_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                                placeholder_text="Должность",
+                                placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        post_ent.pack(pady=10)
+        num_ent = ctk.CTkEntry(frame, width=350, height=40, corner_radius=20, bg_color="#F2E1D0", fg_color="#D4C7B4",
+                               placeholder_text="Контактный телефон",
+                               placeholder_text_color="#c97349", font=("Bahnschrift Light", 20), border_width=0)
+        num_ent.pack(pady=10)
+        photo_button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
+                                     fg_color="#D4C7B4", hover_color="#B28753", text="Фото",
+                                     text_color="#854627", font=("Bahnschrift Light", 20), command=choose_photo)
+        photo_button.pack(pady=10, anchor="w")
+        _button = ctk.CTkButton(frame, width=175, height=40, corner_radius=20, bg_color="#F2E1D0",
+                                fg_color="#D4C7B4", hover_color="#B28753", text="Продолжить",
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=mene)
+        _button.pack(pady=30, anchor="w")
+
+        image_frame = ctk.CTkFrame(info_win, width=800, height=400, fg_color="#D4C7B4", bg_color="#F2E1D0")
+        image_frame.pack(side=ctk.RIGHT, padx=30, pady=30, anchor="e")
+
+        image_label = ctk.CTkLabel(image_frame, width=800, height=400, fg_color="#D4C7B4", bg_color="#F2E1D0",
+                                   text="Фото",
+                                   text_color="#854627", font=("Bahnschrift Light", 20))
+        image_label.pack()
 
     info_win.mainloop()
 
@@ -347,37 +436,36 @@ def menu(login):
         global menu_win
         menu_win.destroy()
         from table_window import table_wind
-        table_wind()
+        table_wind(login)
 
     def group():
         global menu_win
         menu_win.destroy()
         from groups_window import groups
-        groups()
+        groups(login)
 
     def stat():
         global menu_win
         menu_win.destroy()
         from stat_window import statistics_win
-        statistics_win()
+        statistics_win(login)
 
     def plan_():
         global menu_win
         menu_win.destroy()
         from plan_window import plan_wind
-        plan_wind()
+        plan_wind(login)
 
     def labs():
         global menu_win
         menu_win.destroy()
         from labs_window import labs_win
-        labs_win()
+        labs_win(login)
 
     def meny():
         global menu_win
-        log = None
         menu_win.destroy()
-        info_window(log)
+        info_window(login)
 
     def create_rounded_avatar():
         image = Image.open("icon.ico")
@@ -388,7 +476,6 @@ def menu(login):
         output_image = Image.new("RGBA", image.size)
         output_image.paste(image, (0, 0), mask)
 
-        # Возвращаем объект CTkImage
         return CTkImage(output_image, size=image.size)
 
     menu_win = ctk.CTk()

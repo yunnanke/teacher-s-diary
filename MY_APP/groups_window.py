@@ -3,12 +3,12 @@ import psycopg2
 import tkinter.ttk as ttk
 from tkinter import messagebox
 
-def back():
+def back(log):
     from main_app import menu
     groups_win.destroy()
-    menu()
+    menu(log)
 
-def groups():
+def groups(login):
     global groups_win, style, label
     groups_win = ctk.CTk()
     groups_win.geometry("1000x800+300+50")
@@ -267,13 +267,9 @@ def groups():
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Посещаемость",
                                  text_color="#854627", font=("Bahnschrift Light", 20), command=load_attendance)
     button_table.pack(pady=10)
-    button_table = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
-                                 fg_color="#D4C7B4", hover_color="#B28753", text="Лабораторные",
-                                 text_color="#854627", font=("Bahnschrift Light", 20))
-    button_table.pack(pady=10)
     button_table = ctk.CTkButton(groups_win, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                  fg_color="#D4C7B4", hover_color="#B28753", text="Назад",
-                                 text_color="#854627", font=("Bahnschrift Light", 20), command=back)
+                                 text_color="#854627", font=("Bahnschrift Light", 20), command=lambda:back(login))
     button_table.place(x=30, y=692)
     label = ctk.CTkLabel(groups_win, text=f"", text_color="#854627", font=("Bahnschrift Light", 20),
                          bg_color="#F2E1D0",
@@ -284,6 +280,6 @@ def groups():
 
     groups_win.mainloop()
 
-
+"""
 if __name__ == "__main__":
-    groups()
+    groups()"""
