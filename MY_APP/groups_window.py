@@ -29,32 +29,91 @@ def groups(login):
                     foreground="#854627",
                     font=("Bahnschrift Light", 12))
 
-    def add_student():
-        global next_id, tree, roo
+    def delete():
+        global tree
+        tree.destroy()
+        load_groups()
+
+    def destroy_st():
+        global next_id, tree, roo, root
+        root.destroy()
         roo = ctk.CTk()
         roo.iconbitmap("icon.ico")
-        roo.title("Заметка")
+        roo.title("Редакция")
+        roo.geometry("400x360+700+250")
+        roo.config(bg="#F2E1D0")
+
+        def delete_student():
+            global next_id
+            student_id = entry_.get()
+            if student_id is None:
+                messagebox.showerror("Ошибка", "Не указан ID или имя студента для удаления.")
+                return
+
+            try:
+                conn = connect_db()
+                cur = conn.cursor()
+
+                cur.execute("DELETE FROM schema_324.attendance WHERE id = %s;", (student_id,))
+                cur.execute("DELETE FROM schema_324.marcks WHERE id = %s;", (student_id,))
+                cur.execute("DELETE FROM schema_324.marcks_stat WHERE id = %s;", (student_id,))
+                cur.execute("DELETE FROM schema_324.attendance_stat WHERE id = %s;", (student_id,))
+                cur.execute("DELETE FROM schema_324.group_notes WHERE id = %s;", (student_id,))
+
+                conn.commit()
+                cur.close()
+                conn.close()
+                roo.destroy()
+                delete()
+
+                messagebox.showinfo("Успех", "Студент успешно удален из всех таблиц.")
+
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось удалить студента: {e}")
+
+        lable = ctk.CTkLabel(roo, width=350, height=60, corner_radius=20, bg_color="#F2E1D0",
+                             fg_color="#D4C7B4", text="Введите id студента:", font=("Bahnschrift Light", 20),
+                             text_color="#854627")
+        lable.pack(pady=10)
+        entry_ = ctk.CTkEntry(roo, width=350, height=60, corner_radius=20, bg_color="#F2E1D0",
+                              fg_color="#D4C7B4", placeholder_text="id студента", placeholder_text_color="#c97349",
+                              font=("Bahnschrift Light", 20), text_color="#854627", border_width=0)
+        entry_.pack(pady=20)
+        save_butt = ctk.CTkButton(roo, text="Удалить", corner_radius=20, bg_color="#F2E1D0",
+                                  fg_color="#D4C7B4", font=("Bahnschrift Light", 20), hover_color="#B28753",
+                                  text_color="#854627", command=delete_student)
+        save_butt.pack(pady=10)
+        roo.mainloop()
+
+
+    def add_student():
+        global next_id, tree, roo, root
+        root.destroy()
+        roo = ctk.CTk()
+        roo.iconbitmap("icon.ico")
+        roo.title("Редакция")
         roo.geometry("400x360+700+250")
         roo.config(bg="#F2E1D0")
 
         def update_note(student_id, new_note):
             try:
+                student_id += 2
                 conn = connect_db()
                 cur = conn.cursor()
-                cur.execute("INSERT INTO schema_324.group_notes (Номер_группы, id, Студент, Заметка) VALUES (%s, %s, %s, %s);""",
-                            ("", student_id,new_note, ""))
+                cur.execute("INSERT INTO schema_324.group_notes (id, Номер_группы, Студент, Заметка) VALUES (%s, %s, %s, %s);""",
+                            (student_id, "", new_note, ""))
                 cur.execute(
-                    "INSERT INTO schema_324.attendance (Номер_группы, Предмет, Студент) VALUES (%s, %s, %s);""",
-                    ("", "", new_note))
+                    "INSERT INTO schema_324.attendance (Номер_группы, id, Предмет, Студент) VALUES (%s, %s, %s, %s);""",
+                    ("", student_id, "", new_note))
                 cur.execute(
-                    "INSERT INTO schema_324.marcks (Номер_группы, Предмет, Студент) VALUES (%s, %s, %s);""",
-                    ("", "", new_note))
+                    "INSERT INTO schema_324.marcks (Номер_группы, id, Предмет, Студент) VALUES (%s, %s, %s, %s);""",
+                    ("", student_id, "", new_note))
                 cur.execute(
-                    "INSERT INTO schema_324.marcks_stat (Номер_группы, Предмет, Студент) VALUES (%s, %s, %s);""",
-                    ("", "", new_note))
+                    "INSERT INTO schema_324.marcks_stat (Номер_группы, id, Предмет, Студент) VALUES (%s, %s, %s, %s);""",
+                    ("", student_id, "", new_note))
                 cur.execute(
-                    "INSERT INTO schema_324.attendance_stat (Номер_группы, Предмет, Студент) VALUES (%s, %s, %s);""",
-                    ("", "", new_note))
+                    "INSERT INTO schema_324.attendance_stat (Номер_группы, id, Предмет, Студент) VALUES (%s, %s, %s, %s);""",
+                    ("", student_id, "", new_note))
                 conn.commit()
                 cur.close()
                 conn.close()
@@ -68,9 +127,9 @@ def groups(login):
             global roo
             new_stud = entry_.get()
             roo.destroy()
-            new_row = ["", str(next_id + 1), f"{new_stud}", ""]
+            new_row = [str(next_id + 1), "", f"{new_stud}", ""]
             tree.insert("", ctk.END, values=new_row)
-            update_note(next_id, new_stud)
+            update_note((next_id+1), new_stud)
             # next_id += 1
 
         lable = ctk.CTkLabel(roo, width=350, height=60, corner_radius=20, bg_color="#F2E1D0",
@@ -81,11 +140,29 @@ def groups(login):
                               fg_color="#D4C7B4", placeholder_text="Студент", placeholder_text_color="#c97349",
                               font=("Bahnschrift Light", 20), text_color="#854627", border_width=0)
         entry_.pack(pady=20)
-        save_butt = ctk.CTkButton(roo, text="Сохранить", corner_radius=20, bg_color="#F2E1D0",
+        save_butt = ctk.CTkButton(roo, text="Создать", corner_radius=20, bg_color="#F2E1D0",
                                   fg_color="#D4C7B4", font=("Bahnschrift Light", 20), hover_color="#B28753",
                                   text_color="#854627", command=get_row)
         save_butt.pack(pady=10)
         roo.mainloop()
+
+    def choice():
+        global root
+        root = ctk.CTk()
+        root.iconbitmap("icon.ico")
+        root.title("Редакция")
+        root.geometry("400x360+700+250")
+        root.config(bg="#F2E1D0")
+
+        save_butt = ctk.CTkButton(root, text="Создать", corner_radius=20, bg_color="#F2E1D0",
+                                  fg_color="#D4C7B4", font=("Bahnschrift Light", 20), hover_color="#B28753",
+                                  text_color="#854627", command=add_student)
+        save_butt.pack(pady=10)
+        save_butt = ctk.CTkButton(root, text="Удалить", corner_radius=20, bg_color="#F2E1D0",
+                                  fg_color="#D4C7B4", font=("Bahnschrift Light", 20), hover_color="#B28753",
+                                  text_color="#854627", command=destroy_st)
+        save_butt.pack(pady=10)
+        root.mainloop()
 
     def connect_db():
         try:
@@ -99,11 +176,6 @@ def groups(login):
             return conn
         except ValueError:
             return None
-
-    def delete():
-        global tree
-        tree.destroy()
-        load_groups()
 
     def load_groups():
         global tree, next_id
@@ -134,6 +206,7 @@ def groups(login):
             columns = [desc[0] for desc in cur.description]
             cur.close()
             conn.close()
+            next_id = 0
 
             tree = ttk.Treeview(notes_frame, style="Custom.Treeview",  columns=columns, show='headings', height=27, cursor="hand2")
             tree.pack(expand=True, padx=10, pady=10)
@@ -142,7 +215,7 @@ def groups(login):
             for col in columns:
                 tree.heading(col, text=col)
                 tree.column(col, width=150, anchor=ctk.CENTER)
-            next_id = 0
+
             for row in rows:
                 tree.insert('', ctk.END, values=row)
                 next_id += 1
@@ -153,7 +226,7 @@ def groups(login):
         conn = connect_db()
         if conn:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM schema_324.attendance;")
+            cur.execute("SELECT * FROM schema_324.attendance ORDER BY id;")
             rows = cur.fetchall()
             columns = [desc[0] for desc in cur.description]
             cur.close()
@@ -175,7 +248,7 @@ def groups(login):
         conn = connect_db()
         if conn:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM schema_324.marcks;")
+            cur.execute("SELECT * FROM schema_324.marcks ORDER BY id;")
             rows = cur.fetchall()
             columns = [desc[0] for desc in cur.description]
             cur.close()
@@ -253,7 +326,7 @@ def groups(login):
     button_info.pack(pady=10)
     button_info = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Редактировать",
-                                text_color="#854627", font=("Bahnschrift Light", 20), command=add_student)
+                                text_color="#854627", font=("Bahnschrift Light", 20), command=choice)
     button_info.pack(pady=10)
     button_info = ctk.CTkButton(buttons_frame, width=200, height=60, corner_radius=20, bg_color="#F2E1D0",
                                 fg_color="#D4C7B4", hover_color="#B28753", text="Заметка",

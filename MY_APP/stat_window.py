@@ -10,7 +10,7 @@ def back(log):
 def statistics_win(login):
     global stat_win
     stat_win = ctk.CTk()
-    stat_win.geometry("900x580+300+50")
+    stat_win.geometry("1000x580+300+50")
     stat_win.title("Группы")
     stat_win.config(bg="#F2E1D0")
     stat_win.iconbitmap("icon.ico")
@@ -74,7 +74,7 @@ def statistics_win(login):
         conn = connect_db()
         if conn:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM schema_324.attendance_stat;")
+            cur.execute("SELECT * FROM schema_324.attendance_stat ORDER BY id;")
             rows = cur.fetchall()
             columns = [desc[0] for desc in cur.description]
             cur.close()
@@ -96,7 +96,7 @@ def statistics_win(login):
         conn = connect_db()
         if conn:
             cur = conn.cursor()
-            cur.execute("SELECT * FROM schema_324.marcks_stat;")
+            cur.execute("SELECT * FROM schema_324.marcks_stat ORDER BY id;")
             rows = cur.fetchall()
             columns = [desc[0] for desc in cur.description]
             cur.close()
